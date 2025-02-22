@@ -3,40 +3,57 @@ from tkinter import *
 from PIL import Image, ImageTk
 from tkinter import messagebox
 import base64
-def encode(key,clear):
-    enc=[]
+
+def encode(key, clear):
+    enc = []
     for i in range(len(clear)):
-        key_c= key[i%len(key)]
-        enc_c=chr((ord(clear[i])+ord(key_c))%256)
+        key_c = key[i % len(key)]
+        enc_c = chr((ord(clear[i]) + ord(key_c)) % 256)
         enc.append(enc_c)
     return base64.urlsafe_b64encode("".join(enc).encode()).decode()
 
-def decode(key,enc):
-    dec=[]
-    enc= base64.urlsafe_b64encode(enc).decode()
+def decode(key, enc):
+    dec = []
+    enc = base64.urlsafe_b64decode(enc).decode()
     for i in range(len(enc)):
-        key_c=key[i%len(key)]
-        dec_c= chr((256+ord(edc[i])-ord(key_c))%256)
+        key_c = key[i % len(key)]
+        dec_c = chr((256 + ord(enc[i]) - ord(key_c)) % 256)
         dec.append(dec_c)
     return "".join(dec)
 
 def save_and_encrypt_notes():
     title = title_entry.get()
-    message = secrets_text.get("1.0", tk.END)  #  imput_text -> secrets_text
+    message = secrets_text.get("1.0", tk.END)  # imput_text -> secrets_text
     master_secret = master_secrets_entry.get()
     if len(title) == 0 or len(message) == 0 or len(master_secret) == 0:
         messagebox.showinfo(title="Error", message="Please enter all info")
     else:
-        #encryption
-        massage_encrypted=encode(master_secret,message)
+        # encryption
+        massage_encrypted = encode(master_secret, message)
         with open("mysecret.txt", "a") as data_file:  # Append modunda açıyoruz.
             data_file.write(f"\n{title}\n{massage_encrypted}")  # Python string de yeni satıra geçme.
-        title_entry.delete(0, END) #mysecret i silmek için.
+        title_entry.delete(0, END)  # mysecret i silmek için.
         secrets_text.delete("1.0", END)
         master_secrets_entry.delete(0, END)
+
+# decode etmek için kullanılan kod.
+def decrypt_notes():
+    massage_encrypted = secrets_text.get("1.0", END)
+    master_secrets = master_secrets_entry.get()
+
+    if len(massage_encrypted) == 0 or len(master_secrets) == 0:
+        messagebox.showinfo(title="Error!", message="Please enter true info!")
+    else:
+        try:
+            decrypt_massage = decode(master_secrets, massage_encrypted)
+            secrets_text.delete("1.0", END)
+            secrets_text.insert("1.0", decrypt_massage)
+        except Exception as e:
+            messagebox.showinfo(title="Error!", message="Please enter encrypted text!")
+
 # Ekran oluşturma
 window = tk.Tk()
-FONT = ("Verdana", 20, "normal")
+FONT = ("Cebri", 15, "normal")
 window.title("Secret Notice")
 window.minsize(width=350, height=600)
 window.config(padx=10, pady=10, bg="black")
@@ -79,7 +96,7 @@ key_input_label = Label(text="Enter Master Key", font=FONT)
 key_input_label.config(padx=10, pady=10, bg="black", fg="white")
 key_input_label.pack()
 
-master_secrets_entry = tk.Entry(width=30, bg="white")  # Değişken adı düzeltildi
+master_secrets_entry = tk.Entry(width=30, bg="white")
 master_secrets_entry.focus()
 master_secrets_entry.pack()
 
@@ -88,7 +105,7 @@ save_button = tk.Button(text="Save & Encrypt", command=save_and_encrypt_notes)
 save_button.pack()
 
 # Girdiğimiz verileri karşılaştırmak için buton eklemeliyiz.
-decrypt_button = Button(text="Decrypt")  # Command kısmı girilmedi
+decrypt_button = Button(text="Decrypt", command=decrypt_notes)  # Command kısmı girilmedi
 decrypt_button.pack()
 
 # Ekranı başlatma
